@@ -2,6 +2,21 @@ open Alcotest;
 open Test_interface;
 module Hazelnut = Hazelnut_lib.Hazelnut;
 
+let show_hexp = (he: Hazelnut.Hexp.t): string => {
+  // Assuming a simple implementation; adjust according to your actual type definitions
+  switch (he) {
+  | Var(s) => "Var(" ++ s ++ ")"
+  | _ => "Other"
+  };
+};
+
+let debugType = (expr: Hazelnut.Hexp.t): unit => {
+  switch (expr) {
+  | Var(s) => Printf.printf("Expression is a Var with string: %s\n", s)
+  | _ => Printf.printf("Expression is of another type.\n")
+  };
+};
+
 let test_eetop_1 = () => {
   let ze: Hazelnut.Zexp.t = Cursor(Var("x"));
   let given: Hazelnut.Hexp.t = Hazelnut.erase_exp(ze);
