@@ -1,5 +1,5 @@
 open Sexplib.Std;
-// open Monad_lib.Monad; // Uncomment this line to use the maybe monad
+// open Monad_lib.Monad; 
 
 let compare_string = String.compare;
 let compare_int = Int.compare;
@@ -90,10 +90,8 @@ type typctx = TypCtx.t(Htyp.t);
 exception Unimplemented;
 
 let rec type_compatibility = (t: Htyp.t, t1: Htyp.t): bool =>
-  // can we declare two in the func definition?
-  // base cases
   if (t == t1) {
-    true; // if both same type
+    true; 
   } else if (t == Hole) {
     true;
   } else if (t1 == Hole) {
@@ -102,7 +100,6 @@ let rec type_compatibility = (t: Htyp.t, t1: Htyp.t): bool =>
     switch (t, t1) {
     | (Arrow(t, t'), Arrow(t1, t1')) =>
       type_compatibility(t, t1) && type_compatibility(t', t1')
-    // if input & output types are both compatible return true?
     | _ => false
     };
   };
@@ -116,7 +113,6 @@ let type_matching = (e: Htyp.t): option(Htyp.t) => {
   };
 };
 
-// let rec syn_ana = (e: )
 
 // Z types
 let rec cur_erasure = (e: Ztyp.t): Htyp.t => {
@@ -142,36 +138,14 @@ let rec erase_exp = (e: Zexp.t): Hexp.t => {
   };
 };
 
-// let erase_exp = (e: Zexp.t): Hexp.t => {
-//   // Used to suppress unused variable warnings
-//   // Okay to remove
-//   let _ = e;
-
-//   raise(Unimplemented);
-// };
-
-// let syn = (ctx: typctx, e: Hexp.t): option(Htyp.t) => {
-//   // Used to suppress unused variable warnings
-//   // Okay to remove
-//   let _ = ctx;
-//   let _ = e;
-
-//   raise(Unimplemented);
-// }
-
-// synthesis => type is returned
 let rec syn = (ctx: typctx, e: Hexp.t): option(Htyp.t) => {
   switch (e) {
   | Asc(e, t) =>
-    // let temp = ana(ctx, e, t);
     if (ana(ctx, e, t)) {
       Some(t);
     } else {
       None;
     }
-  // do we need to conduct analysis here?
-  // Why is the check necessray if we're already given the type assuming Asc
-  // means ascryption
 
   | Var(e) => TypCtx.find_opt(e, ctx)
 
@@ -189,38 +163,15 @@ let rec syn = (ctx: typctx, e: Hexp.t): option(Htyp.t) => {
       }
     | _ => None
     }
-  // let* t1 = type_matching(t1);
-  // switch(t1) {
-  //   | Some val => val
-  //   | _ => None
-  // switch(type_matching(t1)) {
-  //   | Some(Arrow(t2, t')) =>
-  //     if (ana(ctx, e, t2)) {
-  //       Some(t')
-  //     }
-  //     else {
-  //       None
-  //     };
-  //   | _ => None
-  // }
 
-  // let* t' = syn(ctx, f);
-  // let* t' = type_matching(t);
-
-  // Arrow(e, TypCtx.find_opt(syn(e'), ctx));
   | Lit(_) => Some(Num)
 
   | Plus(e1, e2) =>
-    // let t1 = Some(Num)
-    // let t2 = Some(Num)
     if (ana(ctx, e1, Num) && ana(ctx, e2, Num)) {
       Some(Num);
     } else {
       None;
     }
-
-  // | (t1 == Num && t2 == Num) => Num
-  // | _ => None
 
   | EHole => Some(Hole)
   | NEHole(_) => Some(Hole)
@@ -232,31 +183,18 @@ and ana = (ctx: typctx, e: Hexp.t, t: Htyp.t): bool => {
   switch (e) {
   | Lam(x, e1) =>
     switch (type_matching(t)) {
-    // context extension is needed here
     | Some(Arrow(t1, t2)) =>
       let newctx = TypCtx.add(x, t1, ctx);
       ana(newctx, e1, t2);
-    // first arg should be t1, how do I make the correct recursive call
-    // something to do with ctx?
     | _ => false
     }
   | _ =>
     switch (syn(ctx, e)) {
-    | Some(t') => type_compatibility(t', t) // is it better to handle the lamda func first?
+    | Some(t') => type_compatibility(t', t)
     | _ => false
     }
   };
 };
-
-// and ana = (ctx: typctx, e: Hexp.t, t: Htyp.t): bool => {
-//   // Used to suppress unused variable warnings
-//   // Okay to remove
-//   let _ = ctx;
-//   let _ = e;
-//   let _ = t;
-
-//   raise(Unimplemented);
-// };
 
 let rec type_action = (z: Ztyp.t, a: Action.t): option(Ztyp.t) => {
   print_endline("typeeee");
@@ -268,14 +206,12 @@ let rec type_action = (z: Ztyp.t, a: Action.t): option(Ztyp.t) => {
   | (LArrow(Cursor(t1), t2), Move(Parent)) => Some(Cursor(Arrow(t1, t2)))
   | (RArrow(t1, Cursor(t2)), Move(Parent)) => Some(Cursor(Arrow(t1, t2)))
   | (Cursor(_), Del) => Some(Cursor(Hole))
-  // would we insert empty hole here or not or does it not matter
   | (Cursor(t), Construct(Arrow)) => Some(RArrow(t, Cursor(Hole)))
   | (Cursor(Hole), Construct(Num)) => Some(Cursor(Num))
   | _ => zipper_type(z, a)
   };
 }
 
-// [@warning "-8"]
 and zipper_type = (t: Ztyp.t, a: Action.t): option(Ztyp.t) => {
   print_endline("zipperrr");
   switch (t, a) {
@@ -285,23 +221,13 @@ and zipper_type = (t: Ztyp.t, a: Action.t): option(Ztyp.t) => {
     | Some(t1) => Some(LArrow(t1, td))
     | _ => None
     };
-  // switch(t1) {
-  //   | Some(_) => Some(LArrow(t1, td))
-  //   | _ => None
-  // th' = Option.get (th')
-  // Some(Arrow(th', td))
-  // }
   | (RArrow(th, td), a) =>
     print_endline("right");
     switch (type_action(td, a)) {
     | Some(t1) => Some(RArrow(th, t1))
     | _ => None
     };
-  //   switch(t1) {
-  //     | Some(_) => Some(RArrow(th, td))
-  //     | _ => None
   | _ => None
-  // }
   };
 };
 
@@ -332,49 +258,20 @@ let ex_move = (z: Zexp.t, a: Action.t): option(Zexp.t) => {
   };
 };
 
-// let syn_action =
-//     (ctx: typctx, (e: Zexp.t, t: Htyp.t), a: Action.t)
-//     : option((Zexp.t, Htyp.t)) => {
-//   // Used to suppress unused variable warnings
-//   // Okay to remove
-//   let _ = ctx;
-//   let _ = e;
-//   let _ = t;
-//   let _ = a;
-
-//   raise(Unimplemented);
-// }
-
-// let syn_zip = (ctx: typctx, (e: Zexp.t, t: Htyp.t), a: Action.t)
-//     : option((Zexp.t, Htyp.t)) => {
-
-//     };
-
 let rec syn_action =
         (ctx: typctx, (e: Zexp.t, t: Htyp.t), a: Action.t)
         : option((Zexp.t, Htyp.t)) => {
-  // Used to suppress unused variable warnings
-  // Okay to remove
   print_endline("Noneee");
   switch ((e, t), a) {
   | ((Cursor(ed), td), Construct(Asc)) => Some((RAsc(ed, Cursor(td)), td))
-  // | ((Cursor(ed), _), Construct(Asc)) =>
-  //   switch(syn(ctx, ed)) {
-  //     | Some(td) => Some((RAsc(ed, Cursor(td)), td))
-  //     | _ => None
-  //   };
-  // syn(ctx, e2, t1)
+
   | ((Cursor(_), _), Del) => Some((Cursor(EHole), Hole))
-  // | ((Cursor(e1), t1), Construct(Asc)) => Some((RAsc(e1, Cursor(t1)), t1))
   | ((Cursor(EHole), Hole), Construct(Var(x))) =>
     switch (TypCtx.find_opt(x, ctx)) {
     | Some(t1) => Some((Cursor(Var(x)), t1))
     | _ => None
     }
 
-  // | ((Cursor(_), _), Construct(Num)) => Some(Cursor(Num))
-  // let t1 = Option.get ( TypCtx.find_opt(x, ctx) );
-  // Some((Cursor(Var(x)), t1))
   | ((Cursor(EHole), Hole), Construct(Lam(e))) =>
     Some((
       RAsc(Lam(e, EHole), LArrow(Cursor(Hole), Hole)),
@@ -395,39 +292,16 @@ let rec syn_action =
     }
   | ((Cursor(e1), Hole), Construct(NEHole)) =>
     Some((NEHole(Cursor(e1)), Hole))
-  // FIX ME
   | ((Cursor(NEHole(e1)), Hole), Finish) =>
     print_endline("Fin");
     switch (syn(ctx, e1)) {
     | Some(t') => Some((Cursor(e1), t'))
     | _ => None
     };
-  // | ((LAsc(eh, t1), _), a) =>
-  //   print_endline("LAsc");
-  //   switch (ana_action(ctx, eh, a, t1)) {
-  //   | Some(eh') => Some((LAsc(eh', t1), t1))
-  //   | _ => None
-  //   };
-  // // | ((Cursor(ed), td), Construct(Asc)) => Some((RAsc(ed, Cursor(td)), td))
 
-  // | ((RAsc(e', th), _), a) =>
-  //   print_endline("RAsc");
-  //   switch (type_action(th, a)) {
-  //   | Some(th') =>
-  //     print_endline("RAsc1111");
-  //     let tc = cur_erasure(th');
-  //     // let newt = ana_action(e', a, th')
-  //     if (ana(ctx, e', tc)) {
-  //       Some((RAsc(e', th'), tc));
-  //     } else {
-  //       None;
-  //     };
-  //   | _ => None
-  //   };
   | ((LAp(eh, ed), _), a) =>
     switch (syn(ctx, erase_exp(eh))) {
     | Some(t2) =>
-      // let eh' = Option.get (ex_move(eh, a) );
       switch (syn_action(ctx, (eh, t2), a)) {
       | Some((eh', t3)) =>
         switch (type_matching(t3)) {
@@ -462,7 +336,6 @@ let rec syn_action =
     | Some(eh') => Some((LAsc(eh', t1), t1))
     | _ => None
     };
-  // | ((Cursor(ed), td), Construct(Asc)) => Some((RAsc(ed, Cursor(td)), td))
 
   | ((RAsc(e', th), t1), a) =>
     print_endline("RAsc");
@@ -482,23 +355,12 @@ let rec syn_action =
       | _ => None
       }
     };
-  // FIX ME
   | ((Cursor(ed), td), Construct(Plus)) =>
     if (type_compatibility(td, Num)) {
       Some((RPlus(ed, Cursor(EHole)), Num));
     } else {
       Some((NEHole(Cursor(ed)), Hole));
     }
-  // switch (ana_action(ctx, eh, Num)) {
-  // | Some(eh') => Some((LPlus(eh', ed), Num))
-  // | _ => None
-  // }
-  // FIX ME
-  // | ((RPlus(ed, eh), Num), Construct(Plus)) =>
-  //   switch (ana_action(ctx, eh, a, Num)) {
-  //   | Some(eh') => Some((RPlus(ed, eh'), Num))
-  //   | _ => None
-  //   }
   | ((NEHole(eh), Hole), Construct(NEHole)) =>
     switch (syn(ctx, erase_exp(eh))) {
     | Some(td) =>
@@ -552,13 +414,10 @@ and ana_action =
       print_endline("None");
       subsumption(ctx, e, a, t);
     };
-  // FIX ME
   | ((Cursor(_), _), Del) => Some(Cursor(EHole))
   | ((Cursor(ed), td), Construct(Asc)) => Some(RAsc(ed, Cursor(td)))
-  // FIX ME
   | ((Cursor(EHole), td), Construct(Var(x))) =>
     switch (TypCtx.find_opt(x, ctx)) {
-    // gives us type of x
     | Some(t') =>
       if (type_compatibility(td, t')) {
         subsumption(ctx, e, a, t);
@@ -572,7 +431,6 @@ and ana_action =
     | Some(Arrow(_, _)) => Some(Lam(x, Cursor(EHole)))
     | _ => Some(NEHole(RAsc(Lam(x, EHole), LArrow(Cursor(Hole), Hole))))
     }
-  // FIX ME
   | ((Cursor(EHole), td), Construct(Lit(n))) =>
     print_endline("LitA");
     if (type_compatibility(td, Num)) {
@@ -581,7 +439,6 @@ and ana_action =
       Some(NEHole(Cursor(Lit(n))));
     };
 
-  // FIX ME
   | ((Cursor(NEHole(ed)), Hole), Finish) =>
     switch (syn(ctx, ed)) {
     | Some(_) => Some(Cursor(ed))
@@ -622,15 +479,3 @@ and ana_action =
     };
   };
 };
-
-// and ana_action =
-//     (ctx: typctx, e: Zexp.t, a: Action.t, t: Htyp.t): option(Zexp.t) => {
-//   // Used to suppress unused variable warnings
-//   // Okay to remove
-//   let _ = ctx;
-//   let _ = e;
-//   let _ = a;
-//   let _ = t;
-
-//   raise(Unimplemented);
-// };
